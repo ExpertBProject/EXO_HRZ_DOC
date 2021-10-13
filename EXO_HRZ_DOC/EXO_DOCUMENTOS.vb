@@ -113,7 +113,7 @@ Public Class EXO_DOCUMENTOS
         Try
             oForm = objGlobal.SBOApp.Forms.Item(pVal.FormUID)
 
-            If pVal.ItemUID = "54" Or pVal.ItemUID = "4" Then
+            If pVal.ItemUID = "54" Then ' Or pVal.ItemUID = "4" Then
                 sCardCode = CType(oForm.Items.Item("4").Specific, SAPbouiCOM.EditText).Value.ToString.Trim
                 If sCardCode <> "" Then
                     sMensaje = objGlobal.refDi.SQL.sqlStringB1("SELECT ""Notes"" FROM ""OCRD"" Where ""CardCode""='" & sCardCode & "' ")
