@@ -185,6 +185,11 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="SQL\HANA_VALIDAR_NIF_CIF.sql" />
+    <EmbeddedResource Include="SQL\SQL_VALIDAR_NIF_CIF.sql" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <PropertyGroup>
     <PostBuildEvent>IF $(PlatformName) == x64 (

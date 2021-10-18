@@ -4,7 +4,29 @@ Public Class EXO_DOCUMENTOS
     Inherits EXO_UIAPI.EXO_DLLBase
     Public Sub New(ByRef oObjGlobal As EXO_UIAPI.EXO_UIAPI, ByRef actualizar As Boolean, usaLicencia As Boolean, idAddOn As Integer)
         MyBase.New(oObjGlobal, actualizar, False, idAddOn)
+        If actualizar Then
+            CargarScripts()
+        End If
+    End Sub
+    Private Sub CargarScripts()
+        Dim sScript1 As String = ""
 
+        If objGlobal.refDi.comunes.esAdministrador Then
+            Try
+                If objGlobal.compañia.DbServerType = SAPbobsCOM.BoDataServerTypes.dst_HANADB Then
+                    sScript1 = objGlobal.funciones.leerEmbebido(Me.GetType(), "HANA_VALIDAR_NIF_CIF.sql")
+                Else
+                    sScript1 = objGlobal.funciones.leerEmbebido(Me.GetType(), "SQL_VALIDAR_NIF_CIF.sql")
+                End If
+
+                objGlobal.refDi.SQL.sqlUpdB1(sScript1)
+
+            Catch exCOM As System.Runtime.InteropServices.COMException
+                Throw exCOM
+            Catch ex As Exception
+                Throw ex
+            End Try
+        End If
     End Sub
     Public Overrides Function filtros() As EventFilters
         Dim filtrosXML As Xml.XmlDocument = New Xml.XmlDocument
@@ -54,7 +76,9 @@ Public Class EXO_DOCUMENTOS
                                 Case SAPbouiCOM.BoEventTypes.et_CLICK
 
                                 Case SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED
-
+                                    If EventHandler_ItemPressed_Before(infoEvento) = False Then
+                                        Return False
+                                    End If
                                 Case SAPbouiCOM.BoEventTypes.et_VALIDATE
 
                                 Case SAPbouiCOM.BoEventTypes.et_KEY_DOWN
@@ -131,6 +155,71 @@ Public Class EXO_DOCUMENTOS
             Throw ex
         Finally
             EXO_CleanCOM.CLiberaCOM.Form(oForm)
+        End Try
+    End Function
+    Private Function EventHandler_ItemPressed_Before(ByRef pVal As ItemEvent) As Boolean
+        Dim oForm As SAPbouiCOM.Form = Nothing
+        Dim iTamMatrix As Integer = 0
+        Dim bSelLinea As Boolean = False
+        Dim sMensaje As String = ""
+        Dim sCIF As String = ""
+        EventHandler_ItemPressed_Before = False
+
+        Try
+            oForm = objGlobal.SBOApp.Forms.Item(pVal.FormUID)
+            If pVal.ItemUID = "1" And pVal.FormTypeEx = "133" Then
+                sCIF = CType(oForm.Items.Item("123").Specific, SAPbouiCOM.EditText).Value.ToString.Trim
+                If sCIF.Trim = "" Then
+                    sMensaje = "El campo ""Número de identificación fiscal"" no puede estar vacío. Por favor, compruebe el dato."
+                    objGlobal.SBOApp.MessageBox(sMensaje)
+                    Exit Function
+                Else
+                    EventHandler_ItemPressed_Before = Comprobar_CIF_NIF(objGlobal, sCIF)
+                    Exit Function
+                End If
+            End If
+
+            EventHandler_ItemPressed_Before = True
+
+        Catch exCOM As System.Runtime.InteropServices.COMException
+            Throw exCOM
+        Catch ex As Exception
+            Throw ex
+        Finally
+            EXO_CleanCOM.CLiberaCOM.Form(oForm)
+        End Try
+    End Function
+    Public Shared Function Comprobar_CIF_NIF(ByRef oObjGlobal As EXO_UIAPI.EXO_UIAPI, ByVal sValor As String) As Boolean
+        Comprobar_CIF_NIF = False
+        Dim oRs As SAPbobsCOM.Recordset = Nothing
+        Dim sSQL As String = ""
+        Try
+            oRs = CType(oObjGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
+            'Validamos el CIF o NIF
+            If oObjGlobal.compañia.DbServerType = SAPbobsCOM.BoDataServerTypes.dst_HANADB Then
+                sSQL = "SELECT ""EXO_VALIDAR_NIF_CIF""(RTRIM(LTRIM('" & sValor & "'))) ""Es_CIFNIF_OK"" FROM DUMMY;"
+            Else
+                sSQL = "SELECT [dbo].[EXO_VALIDAR_NIF_CIF](RTRIM(LTRIM('" & sValor & "'))) ""Es_CIFNIF_OK"" "
+            End If
+            oRs.DoQuery(sSQL)
+
+            If oRs.RecordCount > 0 Then
+                If CInt(oRs.Fields.Item("Es_CIFNIF_OK").Value.ToString) = 0 Then
+                    oObjGlobal.SBOApp.StatusBar.SetText("(EXO) - El CIF/NIF " & sValor & " no es válido.", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+                    oObjGlobal.SBOApp.MessageBox("El CIF/NIF " & sValor & " no es válido.")
+                    Exit Function
+                End If
+            Else
+                Throw New Exception("No se ha encontrado función EXO_VALIDAR_NIF_CIF")
+                Exit Function
+            End If
+            Comprobar_CIF_NIF = True
+        Catch exCOM As System.Runtime.InteropServices.COMException
+            Throw exCOM
+        Catch ex As Exception
+            Throw ex
+        Finally
+            EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oRs, Object))
         End Try
     End Function
 End Class
