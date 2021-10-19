@@ -174,8 +174,10 @@ Public Class EXO_DOCUMENTOS
                     objGlobal.SBOApp.MessageBox(sMensaje)
                     Exit Function
                 Else
-                    EventHandler_ItemPressed_Before = Comprobar_CIF_NIF(objGlobal, sCIF)
-                    Exit Function
+                    If Left(sCIF.Trim, 2) = "ES" Then
+                        EventHandler_ItemPressed_Before = Comprobar_CIF_NIF(objGlobal, sCIF)
+                        Exit Function
+                    End If
                 End If
             End If
 
