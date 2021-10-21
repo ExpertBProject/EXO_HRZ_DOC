@@ -168,15 +168,17 @@ Public Class EXO_DOCUMENTOS
         Try
             oForm = objGlobal.SBOApp.Forms.Item(pVal.FormUID)
             If pVal.ItemUID = "1" And pVal.FormTypeEx = "133" Then
-                sCIF = CType(oForm.Items.Item("123").Specific, SAPbouiCOM.EditText).Value.ToString.Trim
-                If sCIF.Trim = "" Then
-                    sMensaje = "El campo ""Número de identificación fiscal"" no puede estar vacío. Por favor, compruebe el dato."
-                    objGlobal.SBOApp.MessageBox(sMensaje)
-                    Exit Function
-                Else
-                    If Left(sCIF.Trim, 2) = "ES" Then
-                        EventHandler_ItemPressed_Before = Comprobar_CIF_NIF(objGlobal, sCIF)
+                If oForm.Mode = BoFormMode.fm_ADD_MODE Or oForm.Mode = BoFormMode.fm_UPDATE_MODE Then
+                    sCIF = CType(oForm.Items.Item("123").Specific, SAPbouiCOM.EditText).Value.ToString.Trim
+                    If sCIF.Trim = "" Then
+                        sMensaje = "El campo ""Número de identificación fiscal"" no puede estar vacío. Por favor, compruebe el dato."
+                        objGlobal.SBOApp.MessageBox(sMensaje)
                         Exit Function
+                    Else
+                        If Left(sCIF.Trim, 2) = "ES" Then
+                            EventHandler_ItemPressed_Before = Comprobar_CIF_NIF(objGlobal, sCIF)
+                            Exit Function
+                        End If
                     End If
                 End If
             End If
