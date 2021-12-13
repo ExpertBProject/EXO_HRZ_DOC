@@ -162,7 +162,7 @@ Public Class EXO_DOCUMENTOS
         Dim iTamMatrix As Integer = 0
         Dim bSelLinea As Boolean = False
         Dim sMensaje As String = ""
-        Dim sCIF As String = ""
+        Dim sCIF As String = "" : Dim sIndicator As String = ""
         EventHandler_ItemPressed_Before = False
 
         Try
@@ -170,14 +170,25 @@ Public Class EXO_DOCUMENTOS
             If pVal.ItemUID = "1" And pVal.FormTypeEx = "133" Then
                 If oForm.Mode = BoFormMode.fm_ADD_MODE Or oForm.Mode = BoFormMode.fm_UPDATE_MODE Then
                     sCIF = CType(oForm.Items.Item("123").Specific, SAPbouiCOM.EditText).Value.ToString.Trim
+                    If CType(oForm.Items.Item("120").Specific, SAPbouiCOM.ComboBox).Selected IsNot Nothing Then
+                        sIndicator = CType(oForm.Items.Item("120").Specific, SAPbouiCOM.ComboBox).Selected.Value.ToString
+                    Else
+                        sIndicator = ""
+                    End If
+
+
                     If sCIF.Trim = "" Then
                         sMensaje = "El campo ""Número de identificación fiscal"" no puede estar vacío. Por favor, compruebe el dato."
                         objGlobal.SBOApp.MessageBox(sMensaje)
                         Exit Function
                     Else
-                        If Left(sCIF.Trim, 2) = "ES" Then
-                            EventHandler_ItemPressed_Before = Comprobar_CIF_NIF(objGlobal, sCIF)
+                        If Left(sCIF, 2) = "ES" And sIndicator = "01" Then
                             Exit Function
+                        Else
+                            If Left(sCIF.Trim, 2) = "ES" Then
+                                EventHandler_ItemPressed_Before = Comprobar_CIF_NIF(objGlobal, sCIF)
+                                Exit Function
+                            End If
                         End If
                     End If
                 End If
