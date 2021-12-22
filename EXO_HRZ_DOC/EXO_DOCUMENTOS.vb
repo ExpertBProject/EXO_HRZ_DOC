@@ -183,7 +183,7 @@ Public Class EXO_DOCUMENTOS
                         Exit Function
                     Else
                         If Left(sCIF, 2) = "ES" And sIndicator = "01" Then
-                            Exit Function
+                            EventHandler_ItemPressed_Before = True
                         Else
                             If Left(sCIF.Trim, 2) = "ES" Then
                                 EventHandler_ItemPressed_Before = Comprobar_CIF_NIF(objGlobal, sCIF)
